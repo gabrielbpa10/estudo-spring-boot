@@ -14,14 +14,14 @@ public class TopicoDTO {
     private String mensagem;
     private LocalDateTime dataCriacao;
 
-    public TopicoDTO(Topico topico){
+    public TopicoDTO(Topico topico) {
         this.id = topico.getId();
         this.titulo = topico.getTitulo();
         this.mensagem = topico.getMensagem();
         this.dataCriacao = topico.getDataCriacao();
     }
 
-    public static List<TopicoDTO> converter(List<Topico> topicos){
+    public static List<TopicoDTO> converter(List<Topico> topicos) {
         return topicos.stream().map(TopicoDTO::new).collect(Collectors.toList());
     }
 }
