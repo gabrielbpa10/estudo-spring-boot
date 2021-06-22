@@ -1,6 +1,7 @@
 package br.com.alura.forum.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +24,7 @@ import br.com.alura.forum.repository.TopicoRepository;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -48,11 +50,12 @@ public class TopicosController {
     }
 
     @GetMapping("/{id}")
-    public TopicoDetalhesDTO detalhar(@PathVariable Long id) {
-        Topico topico = topicoRepository.getOne(id);
-        TopicoDetalhesDTO topicoDetalhes = new TopicoDetalhesDTO(topico);
+    public ResponseEntity<TopicoDetalhesDTO> detalhar(@PathVariable Long id) {
+        Optional<Topico> topico = topicoRepository.findById(id);
+        if(topico.isPresent())
+            return new ResponseEntity<TopicoDetalhesDTO>(new TopicoDetalhesDTO(topico.get()),HttpStatus.OK);
 
-        return topicoDetalhes;
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping
@@ -70,15 +73,24 @@ public class TopicosController {
     @DeleteMapping("{id}")
     @Transactional
     public ResponseEntity<?> excluir(@PathVariable Long id){
-        topicoRepository.deleteById(id);
-        return ResponseEntity.ok().build();
+        Optional<Topico> topico = topicoRepository.findById(id);
+        if(topico.isPresent()) {
+            topicoRepository.deleteById(id);
+            return new ResponseEntity<TopicoDTO>(new TopicoDTO(topico.get()),HttpStatus.OK);
+        }
+        
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<TopicoDTO> atualizar(@PathVariable Long id, @RequestBody @Valid AtualizacaoTopicoForm form){
-        Topico topico = form.atualizar(id,topicoRepository);
-
-        return ResponseEntity.ok(new TopicoDTO(topico));
+        Optional <Topico> topicoOptional = topicoRepository.findById(id);
+        if(topicoOptional.isPresent()) {
+            Topico topico = form.atualizar(id,topicoRepository);
+            return new ResponseEntity<TopicoDTO>(new TopicoDTO(topico),HttpStatus.OK);
+        }
+        
+        return ResponseEntity.notFound().build();
     }
 }
