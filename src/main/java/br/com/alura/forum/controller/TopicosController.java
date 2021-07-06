@@ -28,6 +28,8 @@ import br.com.alura.forum.dto.TopicoForm;
 import br.com.alura.forum.modelo.Topico;
 import br.com.alura.forum.repository.CursoRepository;
 import br.com.alura.forum.repository.TopicoRepository;
+import br.com.alura.forum.service.TopicoService;
+
 import java.net.URI;
 import java.util.Optional;
 
@@ -43,23 +45,26 @@ public class TopicosController {
     @Autowired
     private CursoRepository cursoRepository;
 
+    @Autowired
+    private TopicoService topicoService;
+
     @GetMapping
     @Cacheable(value = "listaDeTopicos")
     public Page<TopicoDTO> listar(@RequestParam(required = false) String nomeCurso,
             @PageableDefault(sort = "id", direction = Direction.DESC, page = 0, size = 10) Pageable paginacao) {
             
         if (nomeCurso == null) {
-            Page<Topico> topicos = topicoRepository.findAll(paginacao);
+            Page<Topico> topicos = topicoService.listarTudo(paginacao);
             return TopicoDTO.converter(topicos);
         } else {
-            Page<Topico> topicos = topicoRepository.findByCursoNome(nomeCurso, paginacao);
+            Page<Topico> topicos = topicoService.listarPorCurso(nomeCurso, paginacao);
             return TopicoDTO.converter(topicos);
         }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TopicoDetalhesDTO> detalhar(@PathVariable Long id) {
-        Optional<Topico> topico = topicoRepository.findById(id);
+        Optional<Topico> topico = topicoService.buscarPorId(id);
         if (topico.isPresent())
             return new ResponseEntity<TopicoDetalhesDTO>(new TopicoDetalhesDTO(topico.get()), HttpStatus.OK);
 
@@ -72,7 +77,7 @@ public class TopicosController {
     public ResponseEntity<TopicoDTO> cadastrar(@RequestBody @Valid TopicoForm topicoForm,
             UriComponentsBuilder uriBuilder) {
         Topico topico = topicoForm.converter(cursoRepository);
-        topicoRepository.save(topico);
+        topicoService.salvar(topico);
 
         // Sempre no retorno da mensagem, sempre dizer o novo header (location)
         // e representação do corpo da mensagem
@@ -84,7 +89,7 @@ public class TopicosController {
     @Transactional
     @CacheEvict(value = "listaDeTopicos", allEntries = true)
     public ResponseEntity<?> excluir(@PathVariable Long id) {
-        Optional<Topico> topico = topicoRepository.findById(id);
+        Optional<Topico> topico = topicoService.buscarPorId(id);
         if (topico.isPresent()) {
             topicoRepository.deleteById(id);
             return new ResponseEntity<TopicoDTO>(new TopicoDTO(topico.get()), HttpStatus.OK);
@@ -97,9 +102,9 @@ public class TopicosController {
     @Transactional
     @CacheEvict(value = "listaDeTopicos", allEntries = true)
     public ResponseEntity<TopicoDTO> atualizar(@PathVariable Long id, @RequestBody @Valid AtualizacaoTopicoForm form) {
-        Optional<Topico> topicoOptional = topicoRepository.findById(id);
+        Optional<Topico> topicoOptional = topicoService.buscarPorId(id);
         if (topicoOptional.isPresent()) {
-            Topico topico = form.atualizar(id, topicoRepository);
+            Topico topico = topicoService.atualizar(id, form);
             return new ResponseEntity<TopicoDTO>(new TopicoDTO(topico), HttpStatus.OK);
         }
 
