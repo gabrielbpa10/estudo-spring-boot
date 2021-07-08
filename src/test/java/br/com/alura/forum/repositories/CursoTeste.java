@@ -2,6 +2,7 @@ package br.com.alura.forum.repositories;
 
 import javax.persistence.EntityManager;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,13 +27,19 @@ public class CursoTeste {
     @Autowired
     private EntityManager entityManager;
 
-    @Test
-    public void buscarCursoPorNomeDoCurso(){
-        Curso curso = new Curso();
+    private Curso curso;
+
+    @BeforeEach
+    public void inicializarDadosBanco() {
+        curso = new Curso();
         curso.setNome("HTML 5");
         curso.setCategoria("Web");
         entityManager.persist(curso);
+    }
 
+
+    @Test
+    public void buscarCursoPorNomeDoCurso(){
         String nomeCurso = "HTML 5";
         curso = cursoRepository.findByNome(nomeCurso);
         Assert.notNull(curso);
