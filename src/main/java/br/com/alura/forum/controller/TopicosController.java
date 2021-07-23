@@ -2,7 +2,6 @@ package br.com.alura.forum.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
@@ -48,18 +47,36 @@ public class TopicosController {
     @Autowired
     private TopicoService topicoService;
 
+    /*
+     * @GetMapping
+     * 
+     * @Cacheable(value = "listaDeTopicos") public Page<TopicoDTO>
+     * listar(@RequestParam(required = false) String nomeCurso,
+     * 
+     * @PageableDefault(sort = "id", direction = Direction.DESC, page = 0, size =
+     * 10) Pageable paginacao) {
+     * 
+     * if (nomeCurso == null) { Page<Topico> topicos =
+     * topicoService.listarTudo(paginacao); return TopicoDTO.converter(topicos); }
+     * else { Page<Topico> topicos = topicoService.listarPorCurso(nomeCurso,
+     * paginacao); if (topicos.getContent().isEmpty()) {
+     * 
+     * return Page.empty(paginacao); } return TopicoDTO.converter(topicos); } }
+     */
     @GetMapping
-    @Cacheable(value = "listaDeTopicos")
-    public Page<TopicoDTO> listar(@RequestParam(required = false) String nomeCurso,
+    public ResponseEntity<Page<TopicoDTO>> listar(@RequestParam(required = false) String nomeCurso,
             @PageableDefault(sort = "id", direction = Direction.DESC, page = 0, size = 10) Pageable paginacao) {
-            
-        if (nomeCurso == null) {
-            Page<Topico> topicos = topicoService.listarTudo(paginacao);
-            return TopicoDTO.converter(topicos);
+
+        if (nomeCurso != null) {
+            Page<TopicoDTO> topicosPaginados = topicoService.listarPorCurso(nomeCurso, paginacao);
+            if (topicosPaginados.hasContent()) {
+                return ResponseEntity.ok(topicosPaginados);
+            }
         } else {
-            Page<Topico> topicos = topicoService.listarPorCurso(nomeCurso, paginacao);
-            return TopicoDTO.converter(topicos);
+            Page<TopicoDTO> topicos = topicoService.listarTudo(paginacao);
+            return ResponseEntity.ok(topicos);
         }
+        return ResponseEntity.notFound().header("Pesquisa","Sem resposta").build();
     }
 
     @GetMapping("/{id}")
