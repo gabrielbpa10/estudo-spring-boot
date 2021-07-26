@@ -13,7 +13,7 @@ import br.com.alura.forum.modelo.Usuario;
 import br.com.alura.forum.repository.UsuarioRepository;
 
 @Service
-@Profile("prod")
+@Profile(value = {"prod","test"})
 public class AutenticationService implements UserDetailsService{
     
     @Autowired
